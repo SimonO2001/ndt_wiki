@@ -1,0 +1,76 @@
+<!-- wiki/templates/wiki/home.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NDT-WIKI Home</title>
+  <style>
+    /* Make sure the HTML and body stretch to fill the browser window */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Container taking up full view height */
+    .page-container {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr); /* 5 equal-width columns */
+      height: 100vh; /* Full browser height */
+    }
+
+    /* Each "card" occupying one column in the grid */
+    .category-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* Center content vertically */
+      border-right: 1px solid #ccc; /* Visual divider between columns */
+      text-align: center;
+    }
+
+    /* Remove border on last card if you prefer */
+    .category-card:last-child {
+      border-right: none;
+    }
+
+    .category-card a {
+      text-decoration: none;
+      color: #333;
+      font-size: 1.5rem;
+    }
+
+    .category-card a:hover {
+      color: #007BFF;
+    }
+
+    h1 {
+      position: absolute;
+      top: 0.5rem;
+      left: 1rem;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Static heading, if you want a quick welcome text -->
+  <h1>Welcome to NDT-WIKI</h1>
+
+  <!-- Main container for the categories -->
+  <div class="page-container">
+    {% for category in categories %}
+      <div class="category-card">
+        <h2>
+          <a href="{% url 'wiki:category_detail' cat_slug=category.slug %}">
+            {{ category.name }}
+          </a>
+        </h2>
+      </div>
+    {% endfor %}
+  </div>
+
+</body>
+</html>

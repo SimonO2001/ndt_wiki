@@ -1,0 +1,39 @@
+{% extends "wiki/base.html" %}
+{% block title %}Search Results{% endblock title %}
+
+{% block breadcrumb %}
+  {% if current_category %}
+    → <a href="{% url 'wiki:category_detail' current_category.slug %}">
+        {{ current_category.name }}
+      </a>
+    → <span>Search</span>
+  {% else %}
+    → <span>Search</span>
+  {% endif %}
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="container my-4">
+  <h1 class="mb-3">Search Results for "{{ query }}"</h1>
+
+  {% if results %}
+    <ul class="list-group">
+      {% for page in results %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>
+            <strong>{{ page.title }}</strong> 
+            ({{ page.get_page_type_display }})
+          </span>
+          <a href="{% url 'wiki:page_detail' page.slug %}" class="btn btn-sm btn-primary">
+            View
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-info mt-3">
+      No matches found.
+    </div>
+  {% endif %}
+</div>
+{% endblock content %}

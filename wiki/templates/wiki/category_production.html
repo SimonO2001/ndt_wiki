@@ -1,0 +1,95 @@
+{% extends "wiki/base.html" %}
+
+{% block title %}{{ category.name }} - NDT Wiki{% endblock title %}
+
+{% block breadcrumb %}
+  → <span>{{ category.name }}</span>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="container my-4">
+
+  <h1 class="mb-3">{{ category.name }}</h1>
+
+  <!-- Buttons to create new content -->
+  <div class="mb-4">
+    <strong>Create New:</strong>
+    <a href="{% url 'wiki:note_create' %}" class="btn btn-primary btn-sm ms-2">Note</a>
+    <a href="{% url 'wiki:guide_create' current_category.slug %}" class="btn btn-secondary btn-sm ms-2"> Guide</a>
+
+  </div>
+
+  <!-- If there are no guides and no notes, display fallback -->
+  {% if not guides and not notes %}
+    <div class="alert alert-warning">
+      No pages available for this category yet.
+    </div>
+  {% endif %}
+
+  <!-- GUIDES Section -->
+  {% if guides %}
+    <h2 class="mb-3">Guides</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-4">
+      {% for page in guides %}
+        <div class="col">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">{{ page.title }}</h5>
+              <p class="card-text mb-1">
+                <strong>Created:</strong> {{ page.created_at|date:"Y-m-d" }}
+              </p>
+              {% if page.author %}
+                <p class="card-text mb-1">
+                  <strong>Author:</strong> {{ page.author.username }}
+                </p>
+              {% else %}
+                <p class="card-text mb-1">
+                  <strong>Author:</strong> Unknown
+                </p>
+              {% endif %}
+              <a href="{% url 'wiki:page_detail' page.slug %}" class="btn btn-primary btn-sm mt-2">
+                View Guide
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- NOTES Section -->
+  {% if notes %}
+    <h2 class="mb-3">Notes</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+      {% for page in notes %}
+        <div class="col">
+          <div class="card h-100">
+            <!-- Optional subtle color for notes: 
+                 <div class="card h-100" style="background-color: #fafafa;"> 
+            -->
+            <div class="card-body">
+              <h5 class="card-title">{{ page.title }}</h5>
+              <p class="card-text mb-1">
+                <strong>Created:</strong> {{ page.created_at|date:"Y-m-d" }}
+              </p>
+              {% if page.author %}
+                <p class="card-text mb-1">
+                  <strong>Author:</strong> {{ page.author.username }}
+                </p>
+              {% else %}
+                <p class="card-text mb-1">
+                  <strong>Author:</strong> Unknown
+                </p>
+              {% endif %}
+              <a href="{% url 'wiki:page_detail' page.slug %}" class="btn btn-primary btn-sm mt-2">
+                View Note
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock content %}

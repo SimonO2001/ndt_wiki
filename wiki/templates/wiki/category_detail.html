@@ -1,0 +1,23 @@
+{% extends "wiki/base.html" %}
+
+{% block title %}Home - NDT Wiki{% endblock title %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ category.name }}</title>
+</head>
+<body>
+  <h1>{{ category.name }}</h1>
+
+  <ul>
+    {% for page in pages %}
+      <li><a href="{% url 'wiki:page_detail' page.slug %}">{{ page.title }}</a></li>
+    {% endfor %}
+  </ul>
+</body>
+</html>
+
+{% endblock content %}

@@ -1,0 +1,176 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}NDT Wiki{% endblock title %}</title>
+  <link rel="stylesheet" href="https://unpkg.com/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+
+  <style>
+    /* 1) Remove default margins/padding & set full height */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    /* 2) Flex container to push footer down if content is short */
+    #ndt-wiki-base {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .ndt-nav {
+      width: 100%;
+      background-color: #07486A;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+    }
+    .ndt-left-section, .ndt-right-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .ndt-logo {
+      max-height: 40px;
+    }
+    .ndt-nav a {
+      color: #fff;
+      text-decoration: none;
+    }
+    .ndt-nav a:hover {
+      text-decoration: underline;
+    }
+
+    .ndt-crumb-text {
+      color: #fff;
+      margin: 0;
+    }
+
+    /* Category dropdown is always visible now */
+    .ndt-category-select {
+      color: #000; /* black text in the dropdown */
+      padding: 0.2rem;
+      font-size: 1rem;
+      margin-left: 0.5rem; /* small spacing from text */
+    }
+
+    /* Search bar in the navbar */
+    .ndt-search-bar {
+      display: inline-flex;
+    }
+
+    /* BREADCRUMB strip */
+    .ndt-breadcrumb {
+      width: 100%;
+      background-color: #063d59;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+    }
+    .ndt-breadcrumb a {
+      color: #fff;
+      text-decoration: none;
+    }
+    .ndt-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+    .ndt-breadcrumb span {
+      color: #ccc;
+    }
+
+    /* MAIN CONTENT grows to push footer down */
+    .ndt-content {
+      flex: 1;
+      width: 100%;
+      padding: 1rem;
+    }
+
+    /* FOOTER pinned to bottom if content is short */
+    .ndt-footer {
+      background-color: #07486A;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+      margin-top: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="ndt-wiki-base">
+
+    <!-- NAVBAR -->
+    <div class="ndt-nav">
+      <div class="ndt-left-section">
+        <!-- Logo linking to Home -->
+        <a href="{% url 'wiki:home' %}">
+          <img src="{% static 'wiki/images/Nord_logo_hvidt.png' %}" alt="Nord Logo" class="ndt-logo">
+        </a>
+
+        <!-- "You are viewing: Category" text -->
+        {% if current_category %}
+          <p class="ndt-crumb-text">
+            You are viewing: <strong>{{ current_category.name }}</strong>
+          </p>
+        {% else %}
+          <p class="ndt-crumb-text">NDT Wiki</p>
+        {% endif %}
+
+        <!-- Always-visible dropdown to pick a different category -->
+        <select class="ndt-category-select"
+                onchange="if (this.value) { window.location.href = this.value; }">
+          <option value="" disabled selected>Select Another Category</option>
+          {% for cat in all_categories %}
+            <option value="{% url 'wiki:category_detail' cat.slug %}">
+              {{ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- RIGHT SECTION: Search form -->
+      <div class="ndt-right-section">
+        <form class="ndt-search-bar" action="{% url 'wiki:search' %}" method="GET">
+            <input type="text" name="q" placeholder="Search pages...">
+            
+            <!-- if current_category is set, pass its slug so we remember the category in search results -->
+            {% if current_category %}
+              <input type="hidden" name="from_category" value="{{ current_category.slug }}">
+            {% endif %}
+            
+            <button type="submit" class="btn btn-primary btn-sm">Search</button>
+          </form>
+          
+      </div>
+    </div>
+
+    <!-- BREADCRUMB -->
+    <div class="ndt-breadcrumb">
+      <a href="{% url 'wiki:home' %}">Home</a>
+      {% block breadcrumb %}{% endblock breadcrumb %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="ndt-content">
+      {% block content %}{% endblock content %}
+    </div>
+
+    <!-- FOOTER -->
+    <div class="ndt-footer">
+      <p>© 2025 NDT Wiki - All rights reserved.</p>
+    </div>
+
+  </div>
+
+  <script src="https://unpkg.com/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

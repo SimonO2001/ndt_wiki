@@ -1,0 +1,108 @@
+{% extends "wiki/base.html" %}
+{% load static %}
+
+{% block title %}{{ page.title }}{% endblock title %}
+
+{% block breadcrumb %}
+  → <a href="{% url 'wiki:category_detail' page.category.slug %}">
+      {{ page.category.name }}
+    </a>
+  → <span>{{ page.title }}</span>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="container my-4">
+  
+  <h1 class="mb-4">{{ page.title }}</h1>
+  
+  <!-- Basic info row -->
+  <div class="row gy-3 mb-4">
+    <div class="col-md-6">
+      <p class="lead mb-1">
+        <span class="badge bg-info text-dark">
+          {{ page.get_page_type_display }}
+        </span>
+        &nbsp;in <strong>{{ page.category.name }}</strong>
+      </p>
+      <p class="text-muted mb-1">
+        By:
+        {% if page.author %}
+          {{ page.author }}
+        {% else %}
+          Unknown
+        {% endif %}
+        on {{ page.created_at|date:"Y-m-d H:i" }}
+      </p>
+    </div>
+    <div class="col-md-6 text-md-end">
+      <!-- Potential "Edit" or other action buttons in the future -->
+    </div>
+  </div>
+  
+  <hr>
+  
+  <div class="mb-4">
+    <!-- Main content of the guide/note -->
+    <h5>Content</h5>
+    <p>{{ page.content }}</p>
+  </div>
+  
+  {% if guide_steps %}
+    <hr>
+    <div class="mb-4">
+      <h3 class="mb-3">Steps</h3>
+      <ol class="list-group list-group-numbered">
+        {% for step in guide_steps %}
+          <li class="list-group-item d-flex flex-column align-items-start">
+            <p class="mb-2">{{ step.step_content }}</p>
+            
+            {% if step.file %}
+              <div>
+                <strong>Media:</strong>
+                <a href="{{ step.file.url }}">{{ step.file.name }}</a>
+              </div>
+              
+              <!-- Thumbnail with clickable expansion -->
+              <button type="button"
+                      class="btn btn-link p-0 mt-2"
+                      data-bs-toggle="modal"
+                      data-bs-target="#imgModal-{{ forloop.counter }}">
+                <img src="{{ step.file.url }}"
+                     alt="Guide step media"
+                     class="img-thumbnail"
+                     style="max-width: 200px;">
+              </button>
+
+              <!-- Modal for full-size image -->
+              <div class="modal fade"
+                   id="imgModal-{{ forloop.counter }}"
+                   tabindex="-1"
+                   aria-labelledby="imgModalLabel-{{ forloop.counter }}"
+                   aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                  <div class="modal-content">
+                    <div class="modal-body p-0">
+                      <img src="{{ step.file.url }}"
+                           alt="Full-size image"
+                           class="img-fluid w-100">
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button"
+                              class="btn btn-secondary"
+                              data-bs-dismiss="modal">
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- end modal -->
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
+  
+</div>
+{% endblock content %}
