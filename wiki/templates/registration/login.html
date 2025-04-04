@@ -1,0 +1,21 @@
+{% extends "wiki/base.html" %}
+
+{% block title %}Login{% endblock title %}
+
+{% block breadcrumb %}
+→ <span>Login</span>
+{% endblock breadcrumb %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1>Login</h1>
+
+  <form method="POST" class="mt-4" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <!-- The view automatically sets an action param for 'next' so you return to the protected page -->
+    <button type="submit" class="btn btn-primary">Log In</button>
+  </form>
+</div>
+{% endblock content %}

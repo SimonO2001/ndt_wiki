@@ -24,6 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),   # Home page at /
     path('wiki/', include('wiki.urls', namespace='wiki')),
+    path('accounts/', include('django.contrib.auth.urls')),
     
 ]
 if settings.DEBUG:

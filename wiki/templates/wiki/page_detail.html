@@ -39,30 +39,25 @@
     </div>
   </div>
   
-  <hr>
+
   
-  <div class="mb-4">
-    <!-- Main content of the guide/note -->
-    <h5>Content</h5>
-    <p>{{ page.content }}</p>
-  </div>
   
   {% if guide_steps %}
     <hr>
     <div class="mb-4">
-      <h3 class="mb-3">Steps</h3>
+      <!-- Renamed to "Instructions" -->
+      <h3 class="mb-3">STEPS</h3>
       <ol class="list-group list-group-numbered">
         {% for step in guide_steps %}
           <li class="list-group-item d-flex flex-column align-items-start">
-            <p class="mb-2">{{ step.step_content }}</p>
             
+            <!-- Put "Instruction:" in front of each step -->
+            <p class="mb-2">
+              <strong>Instruction:</strong> {{ step.step_content }}
+            </p>
+
             {% if step.file %}
-              <div>
-                <strong>Media:</strong>
-                <a href="{{ step.file.url }}">{{ step.file.name }}</a>
-              </div>
-              
-              <!-- Thumbnail with clickable expansion -->
+              <!-- Clickable thumbnail that opens a modal -->
               <button type="button"
                       class="btn btn-link p-0 mt-2"
                       data-bs-toggle="modal"
@@ -73,20 +68,26 @@
                      style="max-width: 200px;">
               </button>
 
-              <!-- Modal for full-size image -->
+              <!-- Modal for the full-size image -->
               <div class="modal fade"
                    id="imgModal-{{ forloop.counter }}"
                    tabindex="-1"
                    aria-labelledby="imgModalLabel-{{ forloop.counter }}"
                    aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-dialog modal-dialog-centered modal-xl">
                   <div class="modal-content">
-                    <div class="modal-body p-0">
+                    <div class="modal-body p-0 text-center" style="overflow: auto;">
+                      <!-- Zoomable image -->
                       <img src="{{ step.file.url }}"
                            alt="Full-size image"
-                           class="img-fluid w-100">
+                           class="img-fluid w-100 zoomable-image"
+                           style="cursor: zoom-in;">
                     </div>
                     <div class="modal-footer">
+                      <!-- Moved media path/link inside the modal -->
+                      <a href="{{ step.file.url }}" target="_blank" class="me-auto">
+                        {{ step.file.name }}
+                      </a>
                       <button type="button"
                               class="btn btn-secondary"
                               data-bs-dismiss="modal">
@@ -105,4 +106,21 @@
   {% endif %}
   
 </div>
+
+<!-- Inline script to toggle zoom on click -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.zoomable-image').forEach(function(img) {
+      img.addEventListener('click', function() {
+        if (img.style.transform === 'scale(1.5)') {
+          img.style.transform = 'scale(1)';
+          img.style.cursor = 'zoom-in';
+        } else {
+          img.style.transform = 'scale(1.5)';
+          img.style.cursor = 'zoom-out';
+        }
+      });
+    });
+  });
+</script>
 {% endblock content %}

@@ -40,9 +40,19 @@ class WikiPage(models.Model):
     version = models.IntegerField(default=1)
 
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
-        super().save(*args, **kwargs)
+            if not self.slug:
+                base_slug = slugify(self.title)
+                slug_candidate = base_slug
+                counter = 1
+
+                # While a page with this slug already exists, append a suffix
+                while WikiPage.objects.filter(slug=slug_candidate).exists():
+                    slug_candidate = f"{base_slug}-{counter}"
+                    counter += 1
+
+                self.slug = slug_candidate
+
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.title} ({self.get_page_type_display()})"
