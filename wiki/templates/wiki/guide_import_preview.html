@@ -1,0 +1,24 @@
+{# wiki/guide_import_preview.html #}
+{% extends "wiki/guide_create.html" %}
+{% load static widget_tweaks %}
+
+{% block title %}Preview PDF → Guide{% endblock %}
+
+{% block breadcrumb %}
+  → <a href="{% url 'wiki:category_detail' request.session.import_category %}">Back</a>
+  → <span>Preview import</span>
+{% endblock %}
+
+{% block content %}
+  {# NOW put your skip-autosave *inside* the content block! #}
+  <script>window.SKIP_AUTOSAVE = true;</script>
+
+  <div class="alert alert-info small">
+    <strong>Preview:</strong> guide converted from PDF <em>{{ draft_name }}</em>.  
+    Edit anything, then press <kbd>Save guide</kbd>.
+  </div>
+
+  {# this will render the *entire* form, the thumbnails *and* the textareas 
+     with their initial values (because we’re about to set them in the view) #}
+  {{ block.super }}
+{% endblock %}

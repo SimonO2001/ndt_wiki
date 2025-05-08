@@ -1,0 +1,26 @@
+{% extends "wiki/base.html" %}
+{% load static %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block breadcrumb %}
+  → <a href="{% url 'wiki:category_detail' page.category.slug %}">{{ page.category.name }}</a>
+  → <span>{{ page.title }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+
+  <h1 class="mb-4">{{ page.title }}</h1>
+
+  <p class="lead mb-2">
+    <span class="badge bg-secondary">{{ page.get_page_type_display }}</span>
+    in <strong>{{ page.category.name }}</strong>
+  </p>
+  <p class="text-muted">By {{ page.author|default:"Unknown" }}
+     on {{ page.created_at|date:"Y‑m‑d H:i" }}</p>
+
+  <hr>
+  {{ page.content|linebreaks }}
+</div>
+{% endblock %}

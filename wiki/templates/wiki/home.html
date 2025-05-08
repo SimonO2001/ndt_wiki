@@ -2,172 +2,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>NDT-WIKI Home</title>
-  <style>
-    /* Reset */
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: Arial, sans-serif;
-    }
+<meta charset="utf-8">
+<title>NDT‑WIKI Home</title>
 
-    /* 5-column layout filling full viewport height */
-    .page-container {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      height: 100vh; /* 100% of browser window height */
-    }
+<style>
+html,body{margin:0;height:100%;font-family:System-UI,Arial,sans-serif;}
+.page{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;height:100vh;}
 
-    /* Each cell is position: relative so we can place text on top of video */
-    .category-card {
-      position: relative;
-      overflow: hidden; /* Hide overflow so the video doesn't peek out */
-      border-right: 1px solid #ccc; /* Vertical divider */
-      text-align: center;
-    }
-    .category-card:last-child {
-      border-right: none;
-    }
+/* ---------- card ---------- */
+.card{position:relative;overflow:hidden;cursor:pointer;background:#000;}
+/* bottom bar grows from centre */
+.card::after{
+  content:"";position:absolute;left:0;bottom:0;width:100%;height:4px;background:#07486A;
+  transform:scaleX(0);transform-origin:center;transition:transform .3s ease;
+}
+.card:hover::after{transform:scaleX(1);}
 
-    /* The <video> is absolutely positioned to fill its container */
-    .category-card video {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;  /* Crop to fill the column */
-      filter: grayscale(100%); /* start in grayscale */
-      transition: filter 0.4s ease; /* animate grayscale -> color */
-      pointer-events: none; /* so the link behind it is clickable */
-    }
+/* video: grayscale idle → colour on hover */
+.card video{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  filter:grayscale(100%);display:block;pointer-events:none;
+}
+.card.play video{filter:none;}
 
-    /* On hover, remove grayscale to show color */
-    .category-card:hover video {
-      filter: none;
-    }
+/* ---------- label ---------- */
+.label{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.25);transition:background .15s;
+}
+.card:hover .label{background:rgba(0,0,0,.10);}
+.label h2{margin:0;color:#fff;text-shadow:0 0 4px #000;font-size:clamp(1rem,2vw,1.75rem);position:relative;}
+.label h2::after{
+  content:"";display:block;width:0;height:2px;background:#fff;
+  margin:.35em auto 0;transition:width .3s;
+}
+.card:hover .label h2::after{width:80%;}
 
-    /* The heading/link overlay */
-    .category-content {
-      position: relative; /* sits on top of absolutely positioned video */
-      z-index: 2;         /* ensure it's above the video */
-      color: #fff;        /* text color on top of video */
-      background: rgba(0, 0, 0, 0.5); /* semi-transparent background for contrast */
-      margin: auto;
-      padding: 1rem;
-      width: 80%;
-      top: 35%;
-      transform: translateY(50%); /* slightly below center or you can tweak */
-    }
-
-    .category-content a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 1.5rem;
-    }
-    .category-content a:hover {
-      text-decoration: underline;
-    }
-
-    /* Optional heading at very top */
-    h1.page-title {
-      position: absolute;
-      top: 0.5rem;
-      left: 1rem;
-      margin: 0;
-      z-index: 10; /* above everything else */
-      color: #000;
-      background: #fff;
-      padding: 0.5rem;
-      border-radius: 4px;
-    }
-  </style>
+.stretched{position:absolute;inset:0;text-indent:-9999px;z-index:5;}
+@media (prefers-reduced-motion: reduce){.card video{display:none!important;}}
+</style>
 </head>
 <body>
-  <!-- Static heading if desired -->
-  <h1 class="page-title">Welcome to NDT-WIKI</h1>
+<div class="page">
+{% for c in categories %}
+    {% if c.slug == 'support' %}
+        <div class="card"><video muted playsinline preload="auto" loop>
+            <source src="{% static 'wiki/videos/support-vid.mp4' %}" type="video/mp4"></video>
 
-  <div class="page-container">
-    <!-- 
-      If you have EXACTLY five categories in the same order, you could do 
-      something like this (and map videos by index). 
-      Alternatively, map them individually:
-    -->
-    {% comment %}
-      Let's say your 5 categories (in order) are:
-      1) Support 
-      2) Programming 
-      3) Production
-      4) General
-      5) Daily Work
-    {% endcomment %}
+    {% elif c.slug == 'development' %}
+        <div class="card"><video muted playsinline preload="auto" loop>
+            <source src="{% static 'wiki/videos/prog-vid.mp4' %}" type="video/mp4"></video>
 
-    {% for category in categories %}
-      <div class="category-card" data-index="{{ forloop.counter0 }}">
-        <!-- 
-           We'll attach different videos by index. If your Category ordering 
-           matches the for loop, you can do a simple if/elif or an array 
-           from your view. 
-        -->
-        {% if forloop.counter == 1 %}
-          <video id="vid-support" muted preload="none">
-            <source src="{% static 'wiki/videos/support-vid.mp4' %}" type="video/mp4">
-          </video>
-        {% elif forloop.counter == 2 %}
-          <video id="vid-programming" muted preload="none">
-            <source src="{% static 'wiki/videos/prog-vid.mp4' %}" type="video/mp4">
-          </video>
-        {% elif forloop.counter == 3 %}
-          <video id="vid-production" muted preload="none">
-            <source src="{% static 'wiki/videos/prod-vid.mp4' %}" type="video/mp4">
-          </video>
-        {% elif forloop.counter == 4 %}
-          <video id="vid-general" muted preload="none">
-            <source src="{% static 'wiki/videos/gene-vid.mp4' %}" type="video/mp4">
-          </video>
-        {% elif forloop.counter == 5 %}
-          <video id="vid-daily" muted preload="none">
-            <source src="{% static 'wiki/videos/Daily-vid.mp4' %}" type="video/mp4">
-          </video>
-        {% else %}
-          <!-- Fallback if there's somehow a 6th or more category? -->
-          <div style="background: #333; height: 100%;"></div>
-        {% endif %}
+    {% elif c.slug == 'production' %}
+        <div class="card"><video muted playsinline preload="auto" loop>
+            <source src="{% static 'wiki/videos/prod-vid.mp4' %}" type="video/mp4"></video>
 
-        <div class="category-content">
-          <h2>
-            <a href="{% url 'wiki:category_detail' cat_slug=category.slug %}">
-              {{ category.name }}
-            </a>
-          </h2>
-        </div>
+    {% elif c.slug == 'general' %}
+        <div class="card"><video muted playsinline preload="auto" loop>
+            <source src="{% static 'wiki/videos/gene-vid.mp4' %}" type="video/mp4"></video>
+
+    {% elif c.slug == 'daily' or c.slug == 'daily-work' %}
+        <div class="card"><video muted playsinline preload="auto" loop>
+            <source src="{% static 'wiki/videos/Daily-vid.mp4' %}" type="video/mp4"></video>
+
+    {% else %}
+        <div class="card"><!-- unknown slug -->
+    {% endif %}
+        <div class="label"><h2>{{ c.name }}</h2></div>
+        <a href="{% url 'wiki:category_detail' cat_slug=c.slug %}" class="stretched"></a>
       </div>
-    {% endfor %}
-  </div>
+{% endfor %}
+</div>
 
-  <!-- JavaScript to handle hover play/pause -->
-  <script>
-    // When the user hovers over a column, start playing the video; on mouseout, pause or reset it.
-    document.addEventListener('DOMContentLoaded', function() {
-      const columns = document.querySelectorAll('.category-card');
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      columns.forEach(card => {
-        const vid = card.querySelector('video');
-        if (!vid) return; // skip if no video
+  document.querySelectorAll('.card').forEach(card=>{
+    const vid = card.querySelector('video');
+    if(!vid) return;
 
-        // On hover, play
-        card.addEventListener('mouseenter', () => {
-          vid.play();
-        });
-        // On mouse leave, pause (and optionally reset)
-        card.addEventListener('mouseleave', () => {
-          vid.pause();
-          vid.currentTime = 0;
-        });
-      });
+    /* decode first frame, pause at frame 0 */
+    vid.addEventListener('loadeddata',()=>{ vid.pause(); });
+
+    card.addEventListener('mouseenter',()=>{
+      if(reduce) return;
+      card.classList.add('play');   // removes grayscale
+      vid.play();                   // resumes from last paused frame
     });
-  </script>
+
+    card.addEventListener('mouseleave',()=>{
+      vid.pause();                  // remember currentTime
+      card.classList.remove('play');
+    });
+  });
+});
+</script>
 </body>
 </html>
