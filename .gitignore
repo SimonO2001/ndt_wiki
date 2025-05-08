@@ -1,0 +1,75 @@
+# ─── 1. Byte-compiled / cache ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ─── 2. Virtual environments ────────────────────────────────────────────────────
+# common names: env/, venv/, .venv/
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ─── 3. Distribution / packaging ────────────────────────────────────────────────
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+pip-wheel-metadata/
+pip-log.txt
+
+# ─── 4. Django specifics ───────────────────────────────────────────────────────
+# local settings override
+local_settings.py
+
+# SQLite DB (if you’re using it locally)
+db.sqlite3
+
+# Media and staticfiles collected at deploy time
+media/
+staticfiles/
+
+# If you version‐control migrations, comment out the next line
+# **/migrations/
+
+# ─── 5. VS Code ─────────────────────────────────────────────────────────────────
+.vscode/
+.history/       # if you’ve got extensions that keep histories
+
+# ─── 6. Testing / coverage ─────────────────────────────────────────────────────
+.coverage
+htmlcov/
+.tox/
+.cache/         # pytest or other tools’ cache
+
+# ─── 7. Logs and reports ───────────────────────────────────────────────────────
+*.log
+*.pot
+*.mo
+
+# ─── 8. System files ───────────────────────────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux swap/trash
+*~
+.Trash-*
+.nfs*
