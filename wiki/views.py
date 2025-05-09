@@ -1,5 +1,6 @@
 # wiki/views.py
 
+import io
 from pathlib import Path
 from django.forms import modelformset_factory
 from django.shortcuts import render, get_object_or_404, redirect
@@ -146,54 +147,150 @@ from django.utils.safestring import mark_safe
 # ------------------------------------------------------------
 # wiki/views.py (up at the top)
 
-def _pdf_to_draft(file_obj):
-    import base64, fitz, io
-    from pathlib import Path
+import re, base64, fitz
+from pathlib import Path
 
-    doc   = fitz.open(stream=file_obj.read(), filetype="pdf")
-    title = Path(file_obj.name).stem.replace("_", " ").title()
-    intro = f"Imported from **{file_obj.name}** ({doc.page_count} pages)."
+# how wide our thumbnails and full-res snapshots should be (px)
+THUMB_W = 240
+FULL_W  = 1024
+
+def _pdf_to_draft(file_obj):
+    """
+    Convert PDF (or PDF-stream) to a draft dict:
+      {
+        "title": str,
+        "intro": str,
+        "steps": [
+          { "text": str, "thumb": base64-png, "full": base64-png },
+          …
+        ]
+      }
+
+    - If doc.page_count > 1: one step per page.
+    - If doc.page_count == 1 but text contains "1.", "2.", … at line-starts,
+      split on those numbers into multiple steps.
+    """
+    data = file_obj.read()
+    doc = fitz.open(stream=data, filetype="pdf")
+
+    name = getattr(file_obj, "name", "upload.pdf")
+    title = Path(name).stem.replace("_", " ").title()
+    intro = f"Imported from **{name}** ({doc.page_count} pages)."
+
     steps = []
 
-    THUMB_W = 240
-    FULL_W  = 1024
+    if doc.page_count == 1:
+        # single page: split out numbered list
+        page = doc[0]
+        text = page.get_text("text").strip()
 
-    for page in doc:
-        text = page.get_text("text").strip() or f"Page {page.number+1}"
+        # find all leading numbers "1.", "2.", …
+        headers = re.findall(r'(?m)^\s*(\d+)\.\s*', text)
+        parts   = re.split  (r'(?m)^\s*\d+\.\s*', text)[1:]  # drop before "1."
 
-        # small thumbnail
-        zoom   = THUMB_W / page.rect.width
-        mat    = fitz.Matrix(zoom, zoom)
-        pix    = page.get_pixmap(matrix=mat, colorspace=fitz.csRGB)
-        thumb_b64 = base64.b64encode(pix.tobytes("png")).decode()
+        # render thumbnail once
+        zoom  = THUMB_W / page.rect.width
+        mat   = fitz.Matrix(zoom, zoom)
+        pix   = page.get_pixmap(matrix=mat, colorspace=fitz.csRGB)
+        thumb = base64.b64encode(pix.tobytes("png")).decode()
 
-        # full-res image
-        zoom2  = FULL_W / page.rect.width
-        mat2   = fitz.Matrix(zoom2, zoom2)
-        pix2   = page.get_pixmap(matrix=mat2, colorspace=fitz.csRGB)
-        full_b64  = base64.b64encode(pix2.tobytes("png")).decode()
+        # for each sub-step, generate its full-res
+        for header, body in zip(headers, parts):
+            # full-res for that step
+            zoom2 = FULL_W / page.rect.width
+            mat2  = fitz.Matrix(zoom2, zoom2)
+            pix2  = page.get_pixmap(matrix=mat2, colorspace=fitz.csRGB)
+            full  = base64.b64encode(pix2.tobytes("png")).decode()
 
-        steps.append({
-            "text": text,
-            "thumb": thumb_b64,
-            "full":  full_b64,
-        })
+            steps.append({
+                "text": body.strip(),
+                "thumb": thumb,
+                "full":  full,
+            })
+
+    else:
+        # multi-page: one step per page
+        for page in doc:
+            text = page.get_text("text").strip()
+            if not text:
+                continue
+
+            # thumbnail
+            zoom  = THUMB_W / page.rect.width
+            mat   = fitz.Matrix(zoom, zoom)
+            pix   = page.get_pixmap(matrix=mat, colorspace=fitz.csRGB)
+            thumb = base64.b64encode(pix.tobytes("png")).decode()
+
+            # full-res
+            zoom2 = FULL_W / page.rect.width
+            mat2  = fitz.Matrix(zoom2, zoom2)
+            pix2  = page.get_pixmap(matrix=mat2, colorspace=fitz.csRGB)
+            full  = base64.b64encode(pix2.tobytes("png")).decode()
+
+            steps.append({
+                "text": text,
+                "thumb": thumb,
+                "full":  full,
+            })
 
     return {"title": title, "intro": intro, "steps": steps}
 
 
+import subprocess
+import tempfile
+from pathlib import Path
+from django.core.files.uploadedfile import InMemoryUploadedFile
+
+def _odt_to_pdf(uploaded_odt):
+    # write the uploaded .odt to a temp file
+    odt_fd, odt_path = tempfile.mkstemp(suffix=".odt")
+    with open(odt_path, "wb") as f:
+        for chunk in uploaded_odt.chunks():
+            f.write(chunk)
+
+    # convert to PDF next to it
+    pdf_path = Path(odt_path).with_suffix(".pdf")
+    subprocess.run([
+        "soffice", "--headless", "--convert-to", "pdf", "--outdir",
+        str(pdf_path.parent), odt_path
+    ], check=True)
+
+    # read the PDF back in as a Django file-like object
+    with open(pdf_path, "rb") as f:
+        pdf_data = f.read()
+
+    # clean up
+    Path(odt_path).unlink()
+    pdf_path.unlink()
+
+    # wrap in a Django InMemoryUploadedFile if you need
+    return io.BytesIO(pdf_data)
 
 
+from pathlib import Path
+import io
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .forms import PDFImportForm, GuideForm, GuideStepFormSet
+from .views import _pdf_to_draft, _odt_to_pdf
 
-# =====================================================================
-#  1)  UPLOAD  /wiki/guide/import/
-# =====================================================================
 @login_required
 def guide_import_upload(request):
     if request.method == "POST":
         form = PDFImportForm(request.POST, request.FILES)
         if form.is_valid():
-            draft = _pdf_to_draft(request.FILES["file"])
+            uploaded = request.FILES["file"]
+
+            # If .odt, convert it to a PDF in-memory
+            if uploaded.name.lower().endswith(".odt"):
+                pdf_stream = _odt_to_pdf(uploaded)
+                # Give it a .name so _pdf_to_draft can infer a title
+                pdf_stream.name = Path(uploaded.name).with_suffix(".pdf").name
+                draft = _pdf_to_draft(pdf_stream)
+            else:
+                # Already a PDF; file_obj has .name by default
+                draft = _pdf_to_draft(uploaded)
+
             request.session["import_draft"]    = draft
             cat = form.cleaned_data["category"]
             request.session["import_category"] = cat.id if cat else None
@@ -201,6 +298,8 @@ def guide_import_upload(request):
     else:
         form = PDFImportForm()
     return render(request, "wiki/guide_import_upload.html", {"form": form})
+
+
 
 
 # ✂ ------------------------------------------------------------------

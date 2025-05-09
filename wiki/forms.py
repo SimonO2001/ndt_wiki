@@ -22,11 +22,21 @@ class GuideForm(forms.ModelForm):
 # ──────────────────────────────────────────────────────────────
 #  Guide‑step form + reusable form‑set
 # ──────────────────────────────────────────────────────────────
+# wiki/forms.py
+from django import forms
+from django.forms.widgets import ClearableFileInput
+from .models import GuideStep
+
 class GuideStepForm(forms.ModelForm):
-    """Used for both manual guide creation and PDF import preview."""
+    file = forms.FileField(
+        required=False,
+        widget=ClearableFileInput,  # <-- renders the “Clear” checkbox
+        label="Step image",
+    )
+
     class Meta:
-        model  = GuideStep
-        fields = ["step_content", "file"]      # step_order & wiki_page handled in code
+        model = GuideStep
+        fields = ["step_content", "file"]
 
 
 # Global factory: always provides ONE blank extra form.
